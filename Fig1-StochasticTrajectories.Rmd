@@ -1,0 +1,85 @@
+---
+title: "Fig1-StochasticTrajectories"
+author: "Grant Poulsen, Claire Plunkett, Jody Reimer"
+date: "10/07/2023"
+output: html_document
+editor_options: 
+chunk_output_type: console
+---
+
+Purpose: Demonstrate the concept of first passage time
+
+Run Time: Seconds
+
+```{r library, message = F}
+
+###Setup###
+library(sde)
+library(ggplot2)
+library(R.matlab)
+```
+
+
+```{r}
+
+### Make a few simulations and find their first passage times ###
+#Parameters
+r <- .05
+K <- 2
+h <- .38
+q <- 5
+sigmaVal <- .02
+
+a <- .023
+filename <- "traj_a_023.csv"
+#set.seed(1234) # good for a <- 0.022
+set.seed(1258) # good for a <- 0.023
+#set.seed(2345) # good for a <- 0.024
+
+threshold <- 0.9798 # if a=0.023 (ghost case), threshold for FPT is 0.9798
+Tmax <- 5000 # length of simulation
+
+
+
+#Diffusion & Drift Vector
+mu <- expression(r*x*(1-(x/K)) - (a*x^5)/(x^5 + h^5))
+dif <- expression(sigmaVal*x)
+
+#Data
+fptDem <- vector(length = 3)
+
+#Simulations
+X <- sde.sim(t0 = 0,T = Tmax,X0 = .3,N = Tmax, M =3, drift = mu, sigma = dif, sigma.x = sigmaVal)
+write.table(X,file=filename,sep=",",col.names =FALSE,row.names=FALSE)
+
+# #Search through each simulation
+# for(j in 1:3){
+#    if (max(X[,j])>=threshold){
+#      fptDem[j] <- min(which(X[,j] >= threshold))
+#    }else{
+#      fptDem[j] <- Tmax+1000
+#    }
+# }
+
+```
+
+
+```{r}
+#Plotting
+
+t <- seq(from = 0, to = Tmax, by =1)
+
+#Plot ts1
+plot(t,X[,1], type = 's', ylab = 'Population Density', xlab = 'Time', lwd = 2, cex.axis = 1.48, cex.lab = 1.48, xlim = c(0,Tmax))
+lines(t,X[,2], lwd = 2)
+lines(t,X[,3], lwd = 2)
+
+# #Plot FPTs
+# points(x = fptDem[1], y = .9798, col = 'red', pch = 4,cex = 3, lwd = 2)
+# points(x = fptDem[2], y = .9798, col = 'red', pch = 4,cex = 3, lwd = 2)
+# points(x = fptDem[3], y = .9798, col = 'red', pch = 4,cex = 3, lwd = 2)
+# 
+# #Plot barrier
+# abline(a = NULL, b = NULL, h = .9798, v = NULL, lwd = 2, lty = 2, col = "blue")
+```
+
